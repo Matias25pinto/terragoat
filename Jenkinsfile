@@ -1,33 +1,20 @@
 pipeline {
     agent any
-
     stages {
-
-        stage('Checkov') {
+        stage('Security Scan') {
             steps {
-                script {
-                    docker.image('bridgecrew/checkov:latest').inside("--entrypoint=''") {
-                        try {
-                           sh '''
-                                checkov --soft-fail -o cli -o json --output-file-path console,results.json -d .
-                            '''
-                            junit skipPublishingChecks: true, testResults: 'results.json'
-                        } catch (err) {
-                            junit skipPublishingChecks: true, testResults: 'results.json'
-                            throw err
-                        }
-                    }
-                }
-            }
-        }
-        stage('Compilation') {
-            steps {
-                sh 'echo "Compilación..."'
+                sh '''
+                checkov -d . -o cli -o json \
+                  --output-file-path console,results.json \
+                  --repo-id example/mi-repo --branch main
+                '''
             }
         }
     }
-
-    options {
-        timestamps()
+    post {
+        always {
+            // Archivar el JSON
+            archiveArtifacts 'results.json'
+        }
     }
 }
