@@ -8,9 +8,8 @@ pipeline {
                 script {
                     docker.image('bridgecrew/checkov:latest').inside("--entrypoint=''") {
                         try {
-                            sh '''
+                           sh '''
                                 checkov -d . \
-                                --use-enforcement-rules \
                                 -o cli -o junitxml \
                                 --output-file-path console,results.xml \
                                 --repo-id example/mi-repo \
