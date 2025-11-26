@@ -11,9 +11,9 @@ pipeline {
                            sh '''
                                 checkov --soft-fail -o cli -o json --output-file-path console,results.json -d .
                             '''
-                            junit skipPublishingChecks: true, testResults: 'results.xml'
+                            junit skipPublishingChecks: true, testResults: 'results.json'
                         } catch (err) {
-                            junit skipPublishingChecks: true, testResults: 'results.xml'
+                            junit skipPublishingChecks: true, testResults: 'results.json'
                             throw err
                         }
                     }
