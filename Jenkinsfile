@@ -48,7 +48,7 @@ pipeline {
                                 > ../terrascan-report.json 2>&1
                         ''', returnStatus: true)
                         
-                        echo "Terrascan exit code: ${banditExitCode}"
+                        echo "Terrascan exit code: ${terrascanExitCode}"
 
                     // Verificar que el archivo se creó
                         sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
