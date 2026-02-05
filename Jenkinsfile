@@ -26,6 +26,7 @@ pipeline {
                     }
                 }
             steps {
+                unstash 'terragoat-code'
                 sh '''
                 terrascan scan \
                     -i terraform \
