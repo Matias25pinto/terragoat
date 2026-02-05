@@ -26,13 +26,19 @@ pipeline {
                     }
                 }
             steps {
-                unstash 'terragoat-code'
-                sh '''
-                terrascan scan \
-                    -i terraform \
-                    -d . \
-                    -o json > terrascan-report.json
-                '''
+                    // Recuperar el código stasheado
+                    unstash 'terragoat-code'
+                    
+                    // Eliminar archivo anterior si existe
+                    sh "rm -f terrascan-report.json || true"
+
+                    // Ejecutar Terrascan capturando el exit code
+                    def banditExitCode = sh(script: '''
+                        cd terragoat
+                        terrascan scan -i terraform -d . -o json > ../terrascan-report.json
+                    ''', returnStatus: true)
+                    
+                    echo "Terrascan exit code: ${banditExitCode}"
 
                 // Verificar que el archivo se creó
                     sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
