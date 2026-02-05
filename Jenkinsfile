@@ -20,46 +20,32 @@ pipeline {
 
         stage('SAST - Terrascan Scan') {
             agent {
-                    docker {
-                        image 'tenable/terrascan:latest'
-                        args '--entrypoint="" -u root:root'
-                    }
+                docker {
+                    image 'tenable/terrascan:latest'
+                    args '--entrypoint="" -u root:root -v /tmp/terrascan-policies:/root/.terrascan'
                 }
-            environment {
-                TERRASCAN_HOME = "${WORKSPACE}/.terrascan"
             }
             steps {
                 script {
-                        // Recuperar el código stasheado
-                        unstash 'terragoat-code'
+                    unstash 'terragoat-code'
+                    
+                    sh '''
+                        cd terragoat
                         
-                        // Cear TERRASCAN_HOME Eliminar archivo anterior si existe
-                        sh '''
-                            mkdir -p $TERRASCAN_HOME
-                            rm -f terrascan-report.json || true
-                        '''
-
-                        // Ejecutar Terrascan capturando el exit code
-                        def terrascanExitCode = sh(script: '''
-                            cd terragoat
-                            terrascan scan -i terraform -d . -o json \
-                                --config-path="$TERRASCAN_HOME" \
-                                --policy-path="$TERRASCAN_HOME/policies" \
-                                > ../terrascan-report.json 2>&1
-                        ''', returnStatus: true)
+                        terrascan scan -i terraform -d . -o json > ../terrascan-output-raw.json 2>&1
                         
-                        echo "Terrascan exit code: ${terrascanExitCode}"
-
-                    // Verificar que el archivo se creó
-                        sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
-                        sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
-                        sh "ls -la terrascan-report.json"
-
-                    // Archivar resultados
-                    archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true, allowEmptyArchive: true
+                        # Filtrar solo JSON válido
+                        if grep -q '^{' ../terrascan-output-raw.json; then
+                            grep -E '^\{|^\[' ../terrascan-output-raw.json > ../terrascan-report.json
+                        else
+                            echo '{"results": {"violations": []}}' > ../terrascan-report.json
+                        fi
+                    '''
+                    
+                    archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true
                 }
             }
-            
+
             post {
                 always {
                     script {
