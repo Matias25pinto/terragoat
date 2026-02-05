@@ -57,10 +57,13 @@ pipeline {
                     
                     archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true
 
-                    // Leer el JSON
-                    def jsonReport = readJSON file: 'terrascan-report.json'
+                    // Leer el archivo como texto
+                    def jsonText = readFile('terrascan-report.json')
                     
-                    // Extraer conteos
+                    // Parsear con Groovy JsonSlurper (no requiere plugin)
+                    def jsonReport = new groovy.json.JsonSlurper().parseText(jsonText)
+                    
+                    // Ahora puedes acceder a los datos
                     def lowCount = jsonReport.results.scan_summary.low
                     def mediumCount = jsonReport.results.scan_summary.medium
                     def highCount = jsonReport.results.scan_summary.high
