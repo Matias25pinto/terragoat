@@ -56,6 +56,28 @@ pipeline {
                     sh "ls -la terrascan-report.json"
                     
                     archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true
+
+                    // Leer el JSON
+                    def jsonReport = readJSON file: 'terrascan-report.json'
+                    
+                    // Extraer conteos
+                    def lowCount = jsonReport.results.scan_summary.low
+                    def mediumCount = jsonReport.results.scan_summary.medium
+                    def highCount = jsonReport.results.scan_summary.high
+                    def totalViolations = jsonReport.results.violations.size()
+                    
+                    // Imprimir resumen en formato legible
+                    echo """
+                    ==========================================
+                    RESUMEN DE ESCANEO TERRASCAN
+                    ==========================================
+                    Vulnerabilidades HIGH:    ${highCount}
+                    Vulnerabilidades MEDIUM:  ${mediumCount}
+                    Vulnerabilidades LOW:     ${lowCount}
+                    ------------------------------------------
+                    TOTAL:                    ${totalViolations}
+                    ==========================================
+                    """
                 }
             }
 
