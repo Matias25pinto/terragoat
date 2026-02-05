@@ -26,27 +26,29 @@ pipeline {
                     }
                 }
             steps {
-                    // Recuperar el código stasheado
-                    unstash 'terragoat-code'
-                    
-                    // Eliminar archivo anterior si existe
-                    sh "rm -f terrascan-report.json || true"
+                script {
+                        // Recuperar el código stasheado
+                        unstash 'terragoat-code'
+                        
+                        // Eliminar archivo anterior si existe
+                        sh "rm -f terrascan-report.json || true"
 
-                    // Ejecutar Terrascan capturando el exit code
-                    def banditExitCode = sh(script: '''
-                        cd terragoat
-                        terrascan scan -i terraform -d . -o json > ../terrascan-report.json
-                    ''', returnStatus: true)
-                    
-                    echo "Terrascan exit code: ${banditExitCode}"
+                        // Ejecutar Terrascan capturando el exit code
+                        def banditExitCode = sh(script: '''
+                            cd terragoat
+                            terrascan scan -i terraform -d . -o json > ../terrascan-report.json
+                        ''', returnStatus: true)
+                        
+                        echo "Terrascan exit code: ${banditExitCode}"
 
-                // Verificar que el archivo se creó
-                    sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
-                    sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
-                    sh "ls -la terrascan-report.json"
+                    // Verificar que el archivo se creó
+                        sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
+                        sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
+                        sh "ls -la terrascan-report.json"
 
-                // Archivar resultados
-                archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true, allowEmptyArchive: true
+                    // Archivar resultados
+                    archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true, allowEmptyArchive: true
+                }
             }
             
             post {
