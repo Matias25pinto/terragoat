@@ -3,31 +3,32 @@ pipeline {
 
     stages {
 
-        stage('Checkov') {
+        stage('Checkout') {
             steps {
-                script {
-                    docker.image('bridgecrew/checkov:latest').inside("--entrypoint=''") {
-                        try {
-                           sh '''
-                                checkov -d . -o cli -o junitxml --output-file-path console,results.xml \
-                            '''
-                            junit skipPublishingChecks: true, testResults: 'results.xml'
-                        } catch (err) {
-                            junit skipPublishingChecks: true, testResults: 'results.xml'
-                            throw err
-                        }
-                    }
-                }
+                echo "Obteniendo el código desde GitHub..."
+                sh '''
+                    rm -rf terragoat || true
+                    git clone https://github.com/Matias25pinto/terragoat.git terragoat
+                    git config --global --add safe.directory $WORKSPACE/terragoat
+                    cd terragoat
+                '''
+
+                // Stash para compartir el código entre stages con diferentes agentes
+                stash name: 'terragoat-code', includes: 'terragoat/**'
             }
         }
-        stage('Compilation') {
-            steps {
-                sh 'echo "Compilación..."'
-            }
-        }
+
     }
 
-    options {
-        timestamps()
+    post {
+        success {
+            echo "✓ Pipeline completado exitosamente"
+        }
+        unstable {
+            echo "⚠ Pipeline completado con advertencias"
+        }
+        failure {
+            echo "✗ Pipeline falló"
+        }
     }
 }
