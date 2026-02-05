@@ -25,13 +25,19 @@ pipeline {
                         args '--entrypoint=""'
                     }
                 }
+            environment {
+                TERRASCAN_HOME = "${WORKSPACE}/.terrascan"
+            }
             steps {
                 script {
                         // Recuperar el código stasheado
                         unstash 'terragoat-code'
                         
-                        // Eliminar archivo anterior si existe
-                        sh "rm -f terrascan-report.json || true"
+                        // Cear TERRASCAN_HOME Eliminar archivo anterior si existe
+                        sh '''
+                            mkdir -p $TERRASCAN_HOME
+                            rm -f terrascan-report.json || true
+                        '''
 
                         // Ejecutar Terrascan capturando el exit code
                         def banditExitCode = sh(script: '''
