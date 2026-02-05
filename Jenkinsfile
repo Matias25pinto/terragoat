@@ -36,7 +36,7 @@ pipeline {
                     def terraScanExitCode = sh(script: '''
                         cd terragoat
                         terrascan init scan
-                        terrascan scan
+                        terrascan scan -o json -f ../terrascan-report.json
                     ''', returnStatus: true)
                     
                     echo "TerraScan exit code: ${terraScanExitCode}"
