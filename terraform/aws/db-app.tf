@@ -19,7 +19,14 @@ resource "aws_db_instance" "default" {
   storage_encrypted       = false
   skip_final_snapshot     = true
   monitoring_interval     = 0
-  publicly_accessible     = true
+  publicly_accessible     = false
+
+  ingress {
+    from_port       = 5432
+    to_port         = 5432
+    protocol        = "tcp"
+    security_groups = [aws_security_group.app.id]
+  }
 
   tags = merge({
     Name        = "${local.resource_prefix.value}-rds"
