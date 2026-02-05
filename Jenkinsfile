@@ -22,25 +22,30 @@ pipeline {
             agent {
                 docker {
                     image 'tenable/terrascan:latest'
-                    args '--entrypoint="" -u root:root -v /tmp/terrascan-policies:/root/.terrascan'
+                    args '--entrypoint="" -u root:root'
                 }
             }
             steps {
                 script {
                     unstash 'terragoat-code'
                     
-                    sh '''
+                    // Eliminar archivo anterior si existe
+                    sh "rm -f terrascan-report.json || true"
+                    
+                    // Ejecutar terraScan capturando el exit code
+                    def terraScanExitCode = sh(script: '''
                         cd terragoat
-                        
-                        terrascan scan -i terraform -d . -o json > ../terrascan-output-raw.json 2>&1
-                        
-                        # Filtrar solo JSON válido
-                        if grep -q '^{' ../terrascan-output-raw.json; then
-                            grep -E '^\{|^\[' ../terrascan-output-raw.json > ../terrascan-report.json
-                        else
-                            echo '{"results": {"violations": []}}' > ../terrascan-report.json
-                        fi
-                    '''
+                        terrascan init scan
+                        terrascan scan -o ../terrascan-report.json
+                    ''', returnStatus: true)
+                    
+                    echo "TerraScan exit code: ${terraScanExitCode}"
+                    
+                    
+                    // Verificar que el archivo se creó
+                    sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
+                    sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
+                    sh "ls -la terrascan-report.json"
                     
                     archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true
                 }
