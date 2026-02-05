@@ -41,7 +41,14 @@ pipeline {
                     
                     echo "TerraScan exit code: ${terraScanExitCode}"
                     
-                    
+                    //capturar si encontro vulnerabilidades retorna 1
+                    if (terraScanExitCode == 1) {
+                        unstable(message: "TerraScan encontró vulnerabilidades de seguridad")
+                        echo "TerraScan encontró vulnerabilidades"
+                    } else if (terraScanExitCode == 2) {
+                        error("TerraScan falló con un error")
+                    }
+
                     // Verificar que el archivo se creó
                     sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
                     sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
