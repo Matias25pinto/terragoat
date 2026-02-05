@@ -40,15 +40,6 @@ pipeline {
                     ''', returnStatus: true)
                     
                     echo "TerraScan exit code: ${terraScanExitCode}"
-                    
-                    //capturar si encontro vulnerabilidades retorna 3 bajas, si son 5 media y altas
-                    //6 en caso de error
-                    if (terraScanExitCode == 3 || terraScanExitCode == 5) {
-                        unstable(message: "TerraScan encontró vulnerabilidades de seguridad")
-                        echo "TerraScan encontró vulnerabilidades"
-                    } else if (terraScanExitCode == 6) {
-                        error("TerraScan falló con un error")
-                    }
 
                     // Verificar que el archivo se creó
                     sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
@@ -81,6 +72,15 @@ pipeline {
                     TOTAL:                    ${totalViolations}
                     ==========================================
                     """
+
+                    //capturar si encontro vulnerabilidades retorna 3 bajas, si son 5 media y altas
+                    //6 en caso de error
+                    if (terraScanExitCode == 3 || terraScanExitCode == 5) {
+                        error(message: "TerraScan encontró vulnerabilidades de seguridad")
+                        echo "TerraScan encontró vulnerabilidades"
+                    } else if (terraScanExitCode == 6) {
+                        error("TerraScan falló con un error")
+                    }
                 }
             }
 
