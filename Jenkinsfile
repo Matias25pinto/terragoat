@@ -22,7 +22,7 @@ pipeline {
             agent {
                     docker {
                         image 'tenable/terrascan:latest'
-                        args '--entrypoint=""'
+                        args '--entrypoint="" -u root:root'
                     }
                 }
             environment {
@@ -40,9 +40,12 @@ pipeline {
                         '''
 
                         // Ejecutar Terrascan capturando el exit code
-                        def banditExitCode = sh(script: '''
+                        def terrascanExitCode = sh(script: '''
                             cd terragoat
-                            terrascan scan -i terraform -d . -o json > ../terrascan-report.json
+                            terrascan scan -i terraform -d . -o json \
+                                --config-path="$TERRASCAN_HOME" \
+                                --policy-path="$TERRASCAN_HOME/policies" \
+                                > ../terrascan-report.json 2>&1
                         ''', returnStatus: true)
                         
                         echo "Terrascan exit code: ${banditExitCode}"
