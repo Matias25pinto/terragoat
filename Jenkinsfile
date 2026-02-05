@@ -25,7 +25,6 @@ pipeline {
                         args '--entrypoint=""'
                     }
                 }
-            }
             steps {
                 sh '''
                 terrascan scan \
