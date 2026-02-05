@@ -41,11 +41,12 @@ pipeline {
                     
                     echo "TerraScan exit code: ${terraScanExitCode}"
                     
-                    //capturar si encontro vulnerabilidades retorna 1
-                    if (terraScanExitCode == 1) {
+                    //capturar si encontro vulnerabilidades retorna 3 bajas, si son 5 media y altas
+                    //6 en caso de error
+                    if (terraScanExitCode == 3 || terraScanExitCode == 5) {
                         unstable(message: "TerraScan encontró vulnerabilidades de seguridad")
                         echo "TerraScan encontró vulnerabilidades"
-                    } else if (terraScanExitCode == 2) {
+                    } else if (terraScanExitCode == 6) {
                         error("TerraScan falló con un error")
                     }
 
