@@ -18,6 +18,42 @@ pipeline {
             }
         }
 
+        stage('SAST - Terrascan Scan') {
+            agent {
+                    docker {
+                        image 'tenable/terrascan:latest'
+                        args '--entrypoint=""'
+                    }
+                }
+            }
+            steps {
+                sh '''
+                terrascan scan \
+                    -i terraform \
+                    -d . \
+                    -o json > terrascan-report.json
+                '''
+
+                // Verificar que el archivo se creó
+                    sh "test -f terrascan-report.json && echo 'Archivo terrascan-report.json creado' || echo 'Archivo no existe, creando vacío...'"
+                    sh "test -f terrascan-report.json || echo '{}' > terrascan-report.json"
+                    sh "ls -la terrascan-report.json"
+
+                // Archivar resultados
+                archiveArtifacts artifacts: "terrascan-report.json", fingerprint: true, allowEmptyArchive: true
+            }
+            
+            post {
+                always {
+                    script {
+                        if (fileExists("terrascan-report.json")) {
+                            echo "Resultados de Terrascan disponibles para análisis"
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     post {
